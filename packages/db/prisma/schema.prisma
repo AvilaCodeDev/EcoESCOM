@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -24,34 +19,68 @@ enum TiposResiduos {
   Reciclable
 }
 
-
 model Usuarios {
-  id_usuario Int @id @default(autoincrement())
-  nombre String
-  correo String @unique
-  contrasenia String
-  activo Boolean
-  rol Roles
-  fecha_creacion DateTime @default(now())
-  ultima_actualizacion DateTime @updatedAt
-} 
-
-model Contenedores {
-  id_contenedor Int @id @default(autoincrement())
-  tipo_residuo TiposResiduos
-  id_zona Int
-
-  zona Zonas @relation("ZonasContenedores", fields: [id_zona], references: [id_zona])
+  id_usuario           Int                @id @default(autoincrement())
+  nombre               String
+  correo               String             @unique
+  contrasenia          String
+  activo               Boolean            @default(true)
+  rol                  Roles
+  fecha_creacion       DateTime           @default(now())
+  ultima_actualizacion DateTime           @updatedAt
+  registros_vaciado    RegistrosVaciado[] @relation("OperadorRegistros")
+  reportes             Reportes[]
 }
-
-
 
 model Zonas {
-  id_zona Int @id @default(autoincrement())
-  nombre_zona String
-  activo Boolean
-  
-  contenedor Contenedores[] @relation("ZonasContenedores")
+  id_zona      Int            @id @default(autoincrement())
+  nombre_zona  String
+  descripcion  String?
+  activo       Boolean        @default(true)
+  contenedores Contenedores[] @relation("ZonasContenedores")
+  alertas      Alertas[]
 }
 
+model Contenedores {
+  id_contenedor     Int                @id @default(autoincrement())
+  nombre_contenedor String
+  codigo            String             @unique
+  tipo_residuo      TiposResiduos
+  activo            Boolean            @default(true)
+  id_zona           Int
+  zona              Zonas              @relation("ZonasContenedores", fields: [id_zona], references: [id_zona])
+  registros_vaciado RegistrosVaciado[]
+}
 
+model RegistrosVaciado {
+  id_registro   Int          @id @default(autoincrement())
+  cantidad      Decimal      @db.Decimal(10, 2)
+  fecha         DateTime     @default(now())
+  estado        String
+  id_contenedor Int
+  id_operador   Int
+  contenedor    Contenedores @relation(fields: [id_contenedor], references: [id_contenedor])
+  operador      Usuarios     @relation("OperadorRegistros", fields: [id_operador], references: [id_usuario])
+}
+
+model Reportes {
+  id_reporte     Int      @id @default(autoincrement())
+  tipo           String
+  formato        String
+  periodo_inicio DateTime
+  periodo_final  DateTime
+  ruta_archivo   String
+  tiempo         DateTime @default(now())
+  id_usuario     Int
+  usuario        Usuarios @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model Alertas {
+  id_alerta           Int           @id @default(autoincrement())
+  tipo_residuo        TiposResiduos
+  periodo             String
+  activo              Boolean       @default(true)
+  ultima_notificacion DateTime?
+  id_zona             Int
+  zona                Zonas         @relation(fields: [id_zona], references: [id_zona])
+}

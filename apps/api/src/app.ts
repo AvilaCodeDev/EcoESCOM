@@ -1,0 +1,21 @@
+import express, { type Express } from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { router } from "./routes";
+import { errorHandler } from "./middlewares/error.middleware";
+
+export const app: Express = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+app.use(morgan("dev"));
+
+app.get("/health", (_req, res) => {
+    res.json({ status: "ok", message: "Servidor en funcionamiento" });
+});
+
+app.use("/api", router);
+
+app.use(errorHandler);
