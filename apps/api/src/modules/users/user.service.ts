@@ -5,15 +5,22 @@ import { sendMail } from "../../config/mailer";
 import { AppError } from "../../utils/app-error";
 import type { CreateUserInput, UpdateUserInput } from "./user.schema";
 
-const publicUser = {
+const userWithTurns = {
     id_usuario: true,
     nombre: true,
     correo: true,
     activo: true,
     rol: true,
     fecha_creacion: true,
-    ultima_actualizacion: true
-};
+    ultima_actualizacion: true,
+    turnos: {
+        select: {
+            turno: {
+                select: { id_turno: true, nombre: true }
+            }
+        }
+    }
+} as const;
 
 const toPublicUser = (user: {
     id_usuario: number;
@@ -23,6 +30,7 @@ const toPublicUser = (user: {
     rol: string;
     fecha_creacion: Date;
     ultima_actualizacion: Date;
+    turnos: Array<{ turno: { id_turno: number; nombre: string } }>;
 }) => ({
     id: user.id_usuario,
     name: user.nombre,
@@ -30,35 +38,27 @@ const toPublicUser = (user: {
     active: user.activo,
     role: user.rol,
     createdAt: user.fecha_creacion,
-    updatedAt: user.ultima_actualizacion
+    updatedAt: user.ultima_actualizacion,
+    turns: user.turnos.map((t) => ({ id: t.turno.id_turno, nombre: t.turno.nombre }))
 });
 
 export const listUsers = async () => {
-    const users = await prisma.usuarios.findMany({ select: publicUser });
+    const users = await prisma.usuarios.findMany({ select: userWithTurns });
     return users.map(toPublicUser);
 };
 
 export const getUser = async (id: number) => {
     const user = await prisma.usuarios.findUnique({
         where: { id_usuario: id },
-        select: publicUser
+        select: userWithTurns
     });
-
-    if (!user) {
-        throw new AppError("Usuario no encontrado", 404);
-    }
-
+    if (!user) throw new AppError("Usuario no encontrado", 404);
     return toPublicUser(user);
 };
 
 export const createUser = async (input: CreateUserInput) => {
-    const existing = await prisma.usuarios.findUnique({
-        where: { correo: input.email }
-    });
-
-    if (existing) {
-        throw new AppError("El correo ya está registrado", 409);
-    }
+    const existing = await prisma.usuarios.findUnique({ where: { correo: input.email } });
+    if (existing) throw new AppError("El correo ya está registrado", 409);
 
     const generatedPassword = generatePassword();
     const hashed = await hashPassword(generatedPassword);
@@ -69,9 +69,12 @@ export const createUser = async (input: CreateUserInput) => {
             correo: input.email,
             contrasenia: hashed,
             activo: true,
-            rol: input.role
+            rol: input.role,
+            turnos: input.turnIds
+                ? { create: input.turnIds.map((id_turno) => ({ id_turno })) }
+                : undefined
         },
-        select: publicUser
+        select: userWithTurns
     });
 
     await sendMail({
@@ -87,12 +90,18 @@ export const updateUser = async (id: number, input: UpdateUserInput) => {
     await getUser(id);
 
     if (input.email) {
-        const existing = await prisma.usuarios.findUnique({
-            where: { correo: input.email }
-        });
-
+        const existing = await prisma.usuarios.findUnique({ where: { correo: input.email } });
         if (existing && existing.id_usuario !== id) {
             throw new AppError("El correo ya está registrado", 409);
+        }
+    }
+
+    if (input.turnIds !== undefined) {
+        await prisma.usuariosTurnos.deleteMany({ where: { id_usuario: id } });
+        if (input.turnIds.length > 0) {
+            await prisma.usuariosTurnos.createMany({
+                data: input.turnIds.map((id_turno) => ({ id_usuario: id, id_turno }))
+            });
         }
     }
 
@@ -104,7 +113,7 @@ export const updateUser = async (id: number, input: UpdateUserInput) => {
             rol: input.role,
             activo: input.active
         },
-        select: publicUser
+        select: userWithTurns
     });
 
     return toPublicUser(user);
