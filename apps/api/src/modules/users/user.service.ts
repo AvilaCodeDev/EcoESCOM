@@ -97,12 +97,14 @@ export const updateUser = async (id: number, input: UpdateUserInput) => {
     }
 
     if (input.turnIds !== undefined) {
-        await prisma.usuariosTurnos.deleteMany({ where: { id_usuario: id } });
-        if (input.turnIds.length > 0) {
-            await prisma.usuariosTurnos.createMany({
-                data: input.turnIds.map((id_turno) => ({ id_usuario: id, id_turno }))
-            });
-        }
+        await prisma.$transaction(async (tx) => {
+            await tx.usuariosTurnos.deleteMany({ where: { id_usuario: id } });
+            if (input.turnIds!.length > 0) {
+                await tx.usuariosTurnos.createMany({
+                    data: input.turnIds!.map((id_turno) => ({ id_usuario: id, id_turno }))
+                });
+            }
+        });
     }
 
     const user = await prisma.usuarios.update({
