@@ -20,4 +20,4 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export * from "../generated/prisma/client";
-export { Roles, TiposResiduos } from "../generated/prisma/enums";
+export { Roles } from "../generated/prisma/enums";
