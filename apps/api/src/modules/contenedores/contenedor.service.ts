@@ -42,6 +42,12 @@ export const createContenedor = async (input: CreateContenedorInput) => {
     const existing = await prisma.contenedores.findUnique({ where: { codigo: input.codigo } });
     if (existing) throw new AppError("Ya existe un contenedor con ese código", 409);
 
+    const zona = await prisma.zonas.findUnique({ where: { id_zona: input.idZona } });
+    if (!zona) throw new AppError("Zona no encontrada", 404);
+
+    const tipo = await prisma.tiposResiduo.findUnique({ where: { id_tipo: input.idTipoResiduo } });
+    if (!tipo) throw new AppError("Tipo de residuo no encontrado", 404);
+
     const c = await prisma.contenedores.create({
         data: {
             nombre_contenedor: input.nombre,
