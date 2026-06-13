@@ -7,6 +7,7 @@ import { loginSchema, changePasswordSchema } from "./auth.schema";
 export const authRoutes: Router = Router();
 
 authRoutes.post("/login", validate(loginSchema), authController.login);
+authRoutes.get("/profile", authenticate, authController.getProfile);
 authRoutes.post(
     "/change-password",
     authenticate,
