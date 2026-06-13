@@ -30,11 +30,23 @@ export const getZone = async (id: number) => {
 };
 
 export const createZone = async (input: CreateZoneInput) => {
+    const tiposPredeterminados = await prisma.tiposResiduo.findMany({
+        where: { es_predeterminado: true }
+    });
+
     const zone = await prisma.zonas.create({
         data: {
             nombre_zona: input.name,
             descripcion: input.description,
-            activo: input.active ?? true
+            activo: input.active ?? true,
+            contenedores: {
+                create: tiposPredeterminados.map((tipo, i) => ({
+                    nombre_contenedor: `Contenedor ${tipo.nombre}`,
+                    codigo: `Z-AUTO-${Date.now()}-${i}`,
+                    activo: true,
+                    id_tipo_residuo: tipo.id_tipo
+                }))
+            }
         }
     });
 
