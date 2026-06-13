@@ -30,7 +30,7 @@ const toPublic = (r: {
     contenedor: {
         id: r.contenedor.id_contenedor,
         nombre: r.contenedor.nombre_contenedor,
-        tipoResiduo: r.contenedor.tipo_residuo,
+        tipoResiduo: { id: r.contenedor.tipo_residuo.id_tipo, nombre: r.contenedor.tipo_residuo.nombre },
         zona: { id: r.contenedor.zona.id_zona, nombre: r.contenedor.zona.nombre_zona }
     },
     operador: { id: r.operador.id_usuario, nombre: r.operador.nombre }
@@ -47,12 +47,10 @@ export const listRegistros = async (
         where.id_operador = requesterId;
     }
 
-    if (filters.zonaId) {
-        where.contenedor = { id_zona: filters.zonaId };
-    }
-    if (filters.tipoId) {
-        where.contenedor = { ...((where.contenedor as object) ?? {}), id_tipo_residuo: filters.tipoId };
-    }
+    const contenedorFilter: Record<string, unknown> = {};
+    if (filters.zonaId) contenedorFilter.id_zona = filters.zonaId;
+    if (filters.tipoId) contenedorFilter.id_tipo_residuo = filters.tipoId;
+    if (Object.keys(contenedorFilter).length) where.contenedor = contenedorFilter;
     if (filters.desde || filters.hasta) {
         where.fecha = {
             ...(filters.desde ? { gte: filters.desde } : {}),
