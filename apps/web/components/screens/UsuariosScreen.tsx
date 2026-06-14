@@ -6,6 +6,8 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { IconButton } from '../ui/IconButton';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Field } from '../ui/Field';
 import { Badge } from '../ui/Badge';
 import { Avatar } from '../ui/Avatar';
 import { api } from '../../lib/api';
@@ -40,12 +42,43 @@ export const UsuariosScreen: React.FC = () => {
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('all');
 
+  const [showModal, setShowModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newRole, setNewRole] = useState('TRABAJADOR');
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
   useEffect(() => {
     api.get<ApiUser[]>('/users')
       .then(setUsers)
       .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar'))
       .finally(() => setLoading(false));
   }, []);
+
+  const openModal = () => { setNewName(''); setNewEmail(''); setNewRole('TRABAJADOR'); setFormError(''); setShowModal(true); };
+  const closeModal = () => setShowModal(false);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) { setFormError('El nombre es obligatorio'); return; }
+    if (!newEmail.trim()) { setFormError('El correo es obligatorio'); return; }
+    setFormError('');
+    setSaving(true);
+    try {
+      const user = await api.post<ApiUser>('/users', {
+        name: newName.trim(),
+        email: newEmail.trim(),
+        role: newRole,
+      });
+      setUsers((prev) => [...prev, user]);
+      closeModal();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Error al crear usuario');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const stats = {
     all: users.length,
@@ -65,7 +98,7 @@ export const UsuariosScreen: React.FC = () => {
       <Topbar
         title="Usuarios"
         subtitle={loading ? 'Cargando…' : `${stats.all} cuentas en la plataforma`}
-        actions={<Button icon="user-plus">Invitar usuario</Button>}
+        actions={<Button icon="user-plus" onClick={openModal}>Nuevo usuario</Button>}
       />
 
       <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -158,6 +191,73 @@ export const UsuariosScreen: React.FC = () => {
           )}
         </Card>
       </div>
+
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+        >
+          <div style={{
+            background: 'var(--neutral-0)', borderRadius: 16,
+            width: '100%', maxWidth: 440,
+            boxShadow: 'var(--shadow-xl)',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--neutral-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Nuevo usuario</h2>
+              <IconButton icon="x" variant="ghost" size={32} onClick={closeModal} />
+            </div>
+
+            <form onSubmit={handleCreate} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {formError && (
+                <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,53,69,0.08)', border: '1px solid rgba(220,53,69,0.2)', fontSize: 13, color: '#c0392b' }}>
+                  {formError}
+                </div>
+              )}
+              <Field label="Nombre completo">
+                <Input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Nombre del usuario"
+                  icon="user"
+                  required
+                  autoFocus
+                />
+              </Field>
+              <Field label="Correo electrónico" help="Se enviará la contraseña generada a este correo">
+                <Input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                  icon="mail"
+                  required
+                />
+              </Field>
+              <Field label="Rol">
+                <Select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                >
+                  <option value="TRABAJADOR">Operativo</option>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="SUPERADMIN">Super Admin</option>
+                </Select>
+              </Field>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                <Button type="button" variant="secondary" onClick={closeModal}>Cancelar</Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? 'Creando…' : 'Crear usuario'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

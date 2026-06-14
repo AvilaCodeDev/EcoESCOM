@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-MX">
-      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+      <body className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "pnpm run /src/server.ts",
     "dev": "tsx watch src/server.ts",
     "check-types": "tsc --noEmit",
     "test": "vitest",
