@@ -26,23 +26,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const match = document.cookie.match(/(?:^|; )token=([^;]+)/);
-    if (!match || !match[1]) return;
+    if (!match || !match[1]) return () => controller.abort();
     const t = decodeURIComponent(match[1]);
     setToken(t);
-    fetch(`${API_BASE}/auth/profile`, { headers: { Authorization: `Bearer ${t}` } })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+    fetch(`${API_BASE}/auth/profile`, {
+      headers: { Authorization: `Bearer ${t}` },
+      signal: controller.signal,
+    })
+      .then((r) => {
+        if (r.ok) return r.json();
+        return r.status === 401
+          ? Promise.reject({ clear: true })
+          : Promise.reject({ clear: false });
+      })
       .then((p: { id: number; name: string; email: string; role: string }) =>
         setUser({ id: p.id, name: p.name, email: p.email, role: p.role })
       )
-      .catch(() => {
-        document.cookie = 'token=; path=/; Max-Age=0';
-        setToken(null);
+      .catch((err?: { clear?: boolean; name?: string }) => {
+        if (err?.name === 'AbortError') return;
+        if (err?.clear) {
+          document.cookie = 'token=; path=/; Max-Age=0';
+          setToken(null);
+        }
       });
+    return () => controller.abort();
   }, []);
 
   const login = useCallback((u: AuthUser, t: string) => {
-    document.cookie = `token=${encodeURIComponent(t)}; path=/; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`;
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `token=${encodeURIComponent(t)}; path=/; SameSite=Lax${secure}; Max-Age=${7 * 24 * 60 * 60}`;
     setToken(t);
     setUser(u);
   }, []);
