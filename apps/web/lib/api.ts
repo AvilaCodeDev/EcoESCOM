@@ -19,8 +19,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(_initHeaders as Record<string, string> | undefined ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     ...restInit,
   });
