@@ -1,10 +1,5 @@
-import React from "react";
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
+import { redirect } from 'next/navigation';
 
-
-export default function Home() {
-  return (
-    <h1>EcoESCOM</h1>
-  );
+export default function RootPage() {
+  redirect('/login');
 }
