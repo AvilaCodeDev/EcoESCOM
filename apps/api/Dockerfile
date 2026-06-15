@@ -24,12 +24,14 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+RUN npm install -g tsx
+
 COPY --from=builder /app/node_modules          ./node_modules
 COPY --from=builder /app/packages              ./packages
 COPY --from=builder /app/apps/api              ./apps/api
 COPY package.json pnpm-workspace.yaml ./
 
 EXPOSE 4000
-CMD ["node", "node_modules/.bin/tsx", "apps/api/src/server.ts"]
+CMD ["tsx", "apps/api/src/server.ts"]
 
 FROM runner AS development

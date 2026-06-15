@@ -38,8 +38,8 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        node node_modules/.bin/tsx apps/api/src/seed.ts &&
-        node node_modules/.bin/tsx apps/api/src/server.ts
+        tsx apps/api/src/seed.ts &&
+        tsx apps/api/src/server.ts
       "
     networks:
       - internal
