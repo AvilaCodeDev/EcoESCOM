@@ -24,7 +24,7 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-RUN npm install -g tsx prisma
+RUN npm install -g tsx prisma@6
 
 COPY --from=builder /app/node_modules          ./node_modules
 COPY --from=builder /app/packages              ./packages
