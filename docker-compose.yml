@@ -38,6 +38,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "
+        cd packages/db && prisma migrate deploy && cd /app &&
         tsx apps/api/src/seed.ts &&
         tsx apps/api/src/server.ts
       "
