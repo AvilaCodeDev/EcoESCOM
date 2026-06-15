@@ -15,10 +15,7 @@ export const getUser: RequestHandler = async (req, res) => {
 
 export const createUser: RequestHandler = async (req, res) => {
     const user = await userService.createUser(req.body);
-    res.status(201).json({
-        message: "Usuario creado. Se enviaron las credenciales por correo.",
-        user
-    });
+    res.status(201).json(user);
 };
 
 export const updateUser: RequestHandler = async (req, res) => {

@@ -30,7 +30,7 @@ export const PerfilScreen: React.FC = () => {
     return (
       <div>
         <Topbar title="Perfil" subtitle="Datos de tu cuenta" />
-        <div style={{ padding: 32, textAlign: 'center', color: 'var(--fg-3)' }}>Cargando perfil…</div>
+        <div className="page-pad" style={{ textAlign: 'center', color: 'var(--fg-3)' }}>Cargando perfil…</div>
       </div>
     );
   }
@@ -39,7 +39,7 @@ export const PerfilScreen: React.FC = () => {
     <div>
       <Topbar title="Perfil" subtitle="Datos de tu cuenta institucional" />
 
-      <div style={{ padding: 32, maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="page-pad" style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <Avatar name={user.name} size={72} style={{ fontSize: 28 }} />

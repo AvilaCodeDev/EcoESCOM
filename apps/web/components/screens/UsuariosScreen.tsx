@@ -18,9 +18,14 @@ interface ApiUser {
   email: string;
   active: boolean;
   role: string;
+  mustChangePassword: boolean;
   createdAt: string;
   updatedAt: string;
   turns: { id: number; nombre: string }[];
+}
+
+interface CreateUserResponse extends ApiUser {
+  generatedPassword: string;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -49,6 +54,8 @@ export const UsuariosScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
+  const [createdUser, setCreatedUser] = useState<{ name: string; email: string; password: string } | null>(null);
+
   useEffect(() => {
     api.get<ApiUser[]>('/users')
       .then(setUsers)
@@ -66,13 +73,15 @@ export const UsuariosScreen: React.FC = () => {
     setFormError('');
     setSaving(true);
     try {
-      const user = await api.post<ApiUser>('/users', {
+      const result = await api.post<CreateUserResponse>('/users', {
         name: newName.trim(),
         email: newEmail.trim(),
         role: newRole,
       });
+      const { generatedPassword, ...user } = result;
       setUsers((prev) => [...prev, user]);
       closeModal();
+      setCreatedUser({ name: user.name, email: user.email, password: generatedPassword });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Error al crear usuario');
     } finally {
@@ -101,7 +110,7 @@ export const UsuariosScreen: React.FC = () => {
         actions={<Button icon="user-plus" onClick={openModal}>Nuevo usuario</Button>}
       />
 
-      <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="page-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (
           <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,53,69,0.08)', border: '1px solid rgba(220,53,69,0.2)', fontSize: 13, color: '#c0392b' }}>
             {error}
@@ -134,55 +143,57 @@ export const UsuariosScreen: React.FC = () => {
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--fg-3)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, background: 'var(--bg-card-alt)' }}>
-                <th style={{ padding: '12px 20px' }}>Usuario</th>
-                <th style={{ padding: '12px 12px' }}>Rol</th>
-                <th style={{ padding: '12px 12px' }}>Estado</th>
-                <th style={{ padding: '12px 12px' }}>Turnos</th>
-                <th style={{ padding: '12px 20px', width: 40 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--fg-3)', fontSize: 13 }}>Cargando usuarios…</td>
+          <div className="table-scroll">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: 'var(--fg-3)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, background: 'var(--bg-card-alt)' }}>
+                  <th style={{ padding: '12px 20px' }}>Usuario</th>
+                  <th style={{ padding: '12px 12px' }}>Rol</th>
+                  <th style={{ padding: '12px 12px' }}>Estado</th>
+                  <th style={{ padding: '12px 12px' }}>Turnos</th>
+                  <th style={{ padding: '12px 20px', width: 40 }}></th>
                 </tr>
-              ) : filtered.map((u) => {
-                const rs = ROLE_STYLE[u.role] ?? { bg: 'var(--neutral-100)', fg: 'var(--fg-2)' };
-                return (
-                  <tr key={u.id} style={{ borderTop: '1px solid var(--neutral-100)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(21,115,162,0.03)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ padding: '14px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Avatar name={u.name} size={36} />
-                        <div>
-                          <div style={{ fontWeight: 500, color: 'var(--fg-1)' }}>{u.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--fg-3)' }}>{u.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '14px 12px' }}>
-                      <span style={{ display: 'inline-flex', padding: '4px 10px', borderRadius: 999, background: rs.bg, color: rs.fg, fontSize: 12, fontWeight: 500 }}>
-                        {ROLE_LABEL[u.role] ?? u.role}
-                      </span>
-                    </td>
-                    <td style={{ padding: '14px 12px' }}>
-                      <Badge tone={u.active ? 'success' : 'neutral'} dot>{u.active ? 'activo' : 'inactivo'}</Badge>
-                    </td>
-                    <td style={{ padding: '14px 12px', color: 'var(--fg-3)', fontSize: 13 }}>
-                      {u.turns.length > 0 ? u.turns.map((t) => t.nombre).join(', ') : '—'}
-                    </td>
-                    <td style={{ padding: '14px 20px' }}>
-                      <IconButton icon="more-horizontal" variant="ghost" size={32} />
-                    </td>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--fg-3)', fontSize: 13 }}>Cargando usuarios…</td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ) : filtered.map((u) => {
+                  const rs = ROLE_STYLE[u.role] ?? { bg: 'var(--neutral-100)', fg: 'var(--fg-2)' };
+                  return (
+                    <tr key={u.id} style={{ borderTop: '1px solid var(--neutral-100)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(21,115,162,0.03)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={{ padding: '14px 20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <Avatar name={u.name} size={36} />
+                          <div>
+                            <div style={{ fontWeight: 500, color: 'var(--fg-1)' }}>{u.name}</div>
+                            <div style={{ fontSize: 12, color: 'var(--fg-3)' }}>{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '14px 12px' }}>
+                        <span style={{ display: 'inline-flex', padding: '4px 10px', borderRadius: 999, background: rs.bg, color: rs.fg, fontSize: 12, fontWeight: 500 }}>
+                          {ROLE_LABEL[u.role] ?? u.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 12px' }}>
+                        <Badge tone={u.active ? 'success' : 'neutral'} dot>{u.active ? 'activo' : 'inactivo'}</Badge>
+                      </td>
+                      <td style={{ padding: '14px 12px', color: 'var(--fg-3)', fontSize: 13 }}>
+                        {(u.turns ?? []).length > 0 ? (u.turns ?? []).map((t) => t.nombre).join(', ') : '—'}
+                      </td>
+                      <td style={{ padding: '14px 20px' }}>
+                        <IconButton icon="more-horizontal" variant="ghost" size={32} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {!loading && filtered.length === 0 && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-3)', fontSize: 13 }}>
@@ -228,7 +239,7 @@ export const UsuariosScreen: React.FC = () => {
                   autoFocus
                 />
               </Field>
-              <Field label="Correo electrónico" help="Se enviará la contraseña generada a este correo">
+              <Field label="Correo electrónico">
                 <Input
                   type="email"
                   value={newEmail}
@@ -242,11 +253,12 @@ export const UsuariosScreen: React.FC = () => {
                 <Select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                >
-                  <option value="TRABAJADOR">Operativo</option>
-                  <option value="ADMIN">Administrador</option>
-                  <option value="SUPERADMIN">Super Admin</option>
-                </Select>
+                  options={[
+                    { value: 'TRABAJADOR', label: 'Operativo' },
+                    { value: 'ADMIN', label: 'Administrador' },
+                    { value: 'SUPERADMIN', label: 'Super Admin' },
+                  ]}
+                />
               </Field>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
                 <Button type="button" variant="secondary" onClick={closeModal}>Cancelar</Button>
@@ -255,6 +267,60 @@ export const UsuariosScreen: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {createdUser && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <div style={{
+            background: 'var(--neutral-0)', borderRadius: 16,
+            width: '100%', maxWidth: 420,
+            boxShadow: 'var(--shadow-xl)',
+            display: 'flex', flexDirection: 'column', gap: 0,
+          }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--neutral-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Usuario creado</h2>
+            </div>
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+                Comparte estas credenciales con <strong>{createdUser.name}</strong>. El sistema le pedirá cambiar su contraseña al iniciar sesión por primera vez.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ background: 'var(--neutral-50)', borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Correo</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--fg-1)' }}>{createdUser.email}</span>
+                </div>
+                <div style={{ background: 'var(--neutral-50)', borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Contraseña temporal</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 600, color: 'var(--primary-700)', letterSpacing: '0.05em' }}>
+                      {createdUser.password}
+                    </span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(createdUser.password)}
+                      title="Copiar"
+                      style={{
+                        background: 'none', border: '1px solid var(--border-1)',
+                        borderRadius: 8, padding: '4px 10px', cursor: 'pointer',
+                        fontSize: 12, color: 'var(--fg-2)',
+                      }}
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <Button onClick={() => setCreatedUser(null)}>Entendido</Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

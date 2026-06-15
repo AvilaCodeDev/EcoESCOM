@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth-context';
 
 interface LoginResponse {
   token: string;
+  mustChangePassword: boolean;
   user: { id: number; name: string; email: string; role: string };
 }
 
@@ -33,7 +34,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onForgot }) => {
     try {
       const result = await api.post<LoginResponse>('/auth/login', { email, password });
       login(result.user, result.token);
-      router.push('/dashboard');
+      router.push(result.mustChangePassword ? '/dashboard/cambiar-contrasenia' : '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Credenciales inválidas');
     } finally {
@@ -42,8 +43,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onForgot }) => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1.1fr',
+    <div className="login-grid" style={{
+      minHeight: '100vh',
       background: 'var(--bg-app)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
@@ -99,7 +100,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onForgot }) => {
         </form>
       </div>
 
-      <div style={{
+      <div className="login-panel-right" style={{
         background: 'linear-gradient(135deg, var(--primary-700) 0%, var(--primary-600) 50%, var(--primary-800) 100%)',
         position: 'relative', overflow: 'hidden',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
@@ -121,16 +122,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onForgot }) => {
           </p>
         </div>
         <div style={{ position: 'relative', display: 'flex', gap: 32 }}>
-          <div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 32, fontWeight: 600 }}>
-              1,205 <span style={{ fontSize: 16, opacity: 0.7 }}>kg</span>
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.7 }}>recolectados este mes</div>
-          </div>
-          <div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 32, fontWeight: 600 }}>347</div>
-            <div style={{ fontSize: 12, opacity: 0.7 }}>registros activos</div>
-          </div>
+
         </div>
       </div>
     </div>

@@ -108,7 +108,7 @@ export const ConfiguracionScreen: React.FC = () => {
     <div>
       <Topbar title="Configuración" subtitle="Preferencias de tu cuenta y de la plataforma" />
 
-      <div style={{ padding: 32, display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32, maxWidth: 1080 }}>
+      <div className="page-pad" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32, maxWidth: 1080 }}>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, position: 'sticky', top: 96, alignSelf: 'flex-start' }}>
           {sections.map((s) => {
             const active = section === s.id;

@@ -56,7 +56,7 @@ export const NotificacionesScreen: React.FC = () => {
         </>}
       />
 
-      <div style={{ padding: 32, maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="page-pad" style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (
           <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,53,69,0.08)', border: '1px solid rgba(220,53,69,0.2)', fontSize: 13, color: '#c0392b' }}>
             {error}

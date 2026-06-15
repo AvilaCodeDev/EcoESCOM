@@ -31,17 +31,18 @@ model Turnos {
 }
 
 model Usuarios {
-  id_usuario           Int                @id @default(autoincrement())
-  nombre               String
-  correo               String             @unique
-  contrasenia          String
-  activo               Boolean            @default(true)
-  rol                  Roles
-  fecha_creacion       DateTime           @default(now())
-  ultima_actualizacion DateTime           @updatedAt
-  turnos               UsuariosTurnos[]
-  registros_vaciado    RegistrosVaciado[] @relation("OperadorRegistros")
-  alertas_creadas      Alertas[]          @relation("CreadorAlerta")
+  id_usuario               Int                @id @default(autoincrement())
+  nombre                   String
+  correo                   String             @unique
+  contrasenia              String
+  activo                   Boolean            @default(true)
+  rol                      Roles
+  debe_cambiar_contrasenia Boolean            @default(false)
+  fecha_creacion           DateTime           @default(now())
+  ultima_actualizacion     DateTime           @updatedAt
+  turnos                   UsuariosTurnos[]
+  registros_vaciado        RegistrosVaciado[] @relation("OperadorRegistros")
+  alertas_creadas          Alertas[]          @relation("CreadorAlerta")
 }
 
 model UsuariosTurnos {

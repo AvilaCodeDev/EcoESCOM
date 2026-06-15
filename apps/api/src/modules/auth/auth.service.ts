@@ -23,6 +23,7 @@ export const login = async (input: LoginInput) => {
 
     return {
         token,
+        mustChangePassword: user.debe_cambiar_contrasenia,
         user: {
             id: user.id_usuario,
             name: user.nombre,
@@ -81,6 +82,6 @@ export const changePassword = async (
 
     await prisma.usuarios.update({
         where: { id_usuario: userId },
-        data: { contrasenia: hashed }
+        data: { contrasenia: hashed, debe_cambiar_contrasenia: false }
     });
 };

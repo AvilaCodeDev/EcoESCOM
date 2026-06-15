@@ -67,7 +67,7 @@ export const ValidacionScreen: React.FC = () => {
         </> : <Button variant="secondary" icon="filter">Filtrar</Button>}
       />
 
-      <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="page-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {pending.length === 0 ? (
           <Card style={{ padding: 64, textAlign: 'center' }}>
             <div style={{ width: 56, height: 56, borderRadius: 14, margin: '0 auto 16px', background: 'var(--success-50)', color: 'var(--success-500)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

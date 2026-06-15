@@ -76,18 +76,19 @@ export const DashboardScreen: React.FC = () => {
   const [reporte, setReporte] = useState<Reporte | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
+
   useEffect(() => {
-    Promise.all([
-      api.get<Registro[]>('/registros'),
-      api.get<Reporte>('/reportes'),
-    ])
-      .then(([r, rep]) => {
-        setRegistros(r);
-        setReporte(rep);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    const fetchRegistros = api.get<Registro[]>('/registros')
+      .then(setRegistros)
+      .catch(() => {});
+
+    const fetchReporte = isAdmin
+      ? api.get<Reporte>('/reportes').then(setReporte).catch(() => {})
+      : Promise.resolve();
+
+    Promise.all([fetchRegistros, fetchReporte]).finally(() => setLoading(false));
+  }, [isAdmin]);
 
   const recent = registros.slice(0, 5);
   const distribution = reporte?.byTipo.map((t) => ({
@@ -109,18 +110,18 @@ export const DashboardScreen: React.FC = () => {
         </>}
       />
 
-      <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="page-pad" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {loading ? (
           <div style={{ textAlign: 'center', color: 'var(--fg-3)', padding: 40 }}>Cargando…</div>
         ) : <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className="grid-stats">
             <Stat label="Total recolectado" value={reporte ? reporte.totalKg.toFixed(1) : '—'} unit="kg" />
             <Stat label="Registros" value={String(registros.length)} />
             <Stat label="Zonas activas" value={String(reporte?.byZona.length ?? '—')} />
           </div>
 
           {distribution.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="grid-2col">
               <Card>
                 <SectionTitle>Por categoría</SectionTitle>
                 <div style={{ marginTop: 16 }}>
@@ -153,36 +154,38 @@ export const DashboardScreen: React.FC = () => {
                 Aún no hay registros.
               </div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', color: 'var(--fg-3)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
-                    <th style={{ padding: '12px 24px' }}>ID</th>
-                    <th style={{ padding: '12px 12px' }}>Zona</th>
-                    <th style={{ padding: '12px 12px' }}>Tipo</th>
-                    <th style={{ padding: '12px 12px', textAlign: 'right' }}>Peso</th>
-                    <th style={{ padding: '12px 12px' }}>Operador</th>
-                    <th style={{ padding: '12px 24px', textAlign: 'right' }}>Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((r) => (
-                    <tr key={r.id} style={{ borderTop: '1px solid var(--neutral-100)' }}>
-                      <td style={{ padding: '14px 24px', fontFamily: 'var(--font-mono)', color: 'var(--fg-2)' }}>R-{r.id}</td>
-                      <td style={{ padding: '14px 12px', color: 'var(--fg-1)' }}>{r.contenedor.zona.nombre}</td>
-                      <td style={{ padding: '14px 12px' }}>
-                        <Badge tone={tipoTone(r.contenedor.tipoResiduo.nombre)}>{r.contenedor.tipoResiduo.nombre}</Badge>
-                      </td>
-                      <td style={{ padding: '14px 12px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
-                        {r.cantidad.toFixed(1)} <span style={{ color: 'var(--fg-3)' }}>kg</span>
-                      </td>
-                      <td style={{ padding: '14px 12px', color: 'var(--fg-2)' }}>{r.operador.nombre}</td>
-                      <td style={{ padding: '14px 24px', textAlign: 'right', color: 'var(--fg-3)', fontSize: 13 }}>
-                        {new Date(r.fecha).toLocaleDateString('es-MX')}
-                      </td>
+              <div className="table-scroll">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', color: 'var(--fg-3)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+                      <th style={{ padding: '12px 24px' }}>ID</th>
+                      <th style={{ padding: '12px 12px' }}>Zona</th>
+                      <th style={{ padding: '12px 12px' }}>Tipo</th>
+                      <th style={{ padding: '12px 12px', textAlign: 'right' }}>Peso</th>
+                      <th style={{ padding: '12px 12px' }}>Operador</th>
+                      <th style={{ padding: '12px 24px', textAlign: 'right' }}>Fecha</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recent.map((r) => (
+                      <tr key={r.id} style={{ borderTop: '1px solid var(--neutral-100)' }}>
+                        <td style={{ padding: '14px 24px', fontFamily: 'var(--font-mono)', color: 'var(--fg-2)' }}>R-{r.id}</td>
+                        <td style={{ padding: '14px 12px', color: 'var(--fg-1)' }}>{r.contenedor.zona.nombre}</td>
+                        <td style={{ padding: '14px 12px' }}>
+                          <Badge tone={tipoTone(r.contenedor.tipoResiduo.nombre)}>{r.contenedor.tipoResiduo.nombre}</Badge>
+                        </td>
+                        <td style={{ padding: '14px 12px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
+                          {r.cantidad.toFixed(1)} <span style={{ color: 'var(--fg-3)' }}>kg</span>
+                        </td>
+                        <td style={{ padding: '14px 12px', color: 'var(--fg-2)' }}>{r.operador.nombre}</td>
+                        <td style={{ padding: '14px 24px', textAlign: 'right', color: 'var(--fg-3)', fontSize: 13 }}>
+                          {new Date(r.fecha).toLocaleDateString('es-MX')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Card>
         </>}

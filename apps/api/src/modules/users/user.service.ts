@@ -1,7 +1,6 @@
 import { prisma } from "../../config/prisma";
 import { hashPassword } from "../../utils/hash";
 import { generatePassword } from "../../utils/password-generator";
-import { sendMail } from "../../config/mailer";
 import { AppError } from "../../utils/app-error";
 import type { CreateUserInput, UpdateUserInput } from "./user.schema";
 
@@ -11,6 +10,7 @@ const userWithTurns = {
     correo: true,
     activo: true,
     rol: true,
+    debe_cambiar_contrasenia: true,
     fecha_creacion: true,
     ultima_actualizacion: true,
     turnos: {
@@ -28,6 +28,7 @@ const toPublicUser = (user: {
     correo: string;
     activo: boolean;
     rol: string;
+    debe_cambiar_contrasenia: boolean;
     fecha_creacion: Date;
     ultima_actualizacion: Date;
     turnos: Array<{ turno: { id_turno: number; nombre: string } }>;
@@ -37,6 +38,7 @@ const toPublicUser = (user: {
     email: user.correo,
     active: user.activo,
     role: user.rol,
+    mustChangePassword: user.debe_cambiar_contrasenia,
     createdAt: user.fecha_creacion,
     updatedAt: user.ultima_actualizacion,
     turns: user.turnos.map((t) => ({ id: t.turno.id_turno, nombre: t.turno.nombre }))
@@ -70,6 +72,7 @@ export const createUser = async (input: CreateUserInput) => {
             contrasenia: hashed,
             activo: true,
             rol: input.role,
+            debe_cambiar_contrasenia: true,
             turnos: input.turnIds
                 ? { create: input.turnIds.map((id_turno) => ({ id_turno })) }
                 : undefined
@@ -77,13 +80,7 @@ export const createUser = async (input: CreateUserInput) => {
         select: userWithTurns
     });
 
-    await sendMail({
-        to: input.email,
-        subject: "Tus credenciales de acceso a EcoESCOM",
-        text: `Hola ${input.name}, se creó tu cuenta. Usuario: ${input.email}. Contraseña temporal: ${generatedPassword}. Por seguridad, cámbiala al iniciar sesión.`
-    });
-
-    return toPublicUser(user);
+    return { ...toPublicUser(user), generatedPassword };
 };
 
 export const updateUser = async (id: number, input: UpdateUserInput) => {

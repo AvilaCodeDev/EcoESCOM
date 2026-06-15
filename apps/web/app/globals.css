@@ -206,3 +206,72 @@ button {
   background: var(--primary-100);
   color: var(--primary-800);
 }
+
+/* ============================================================
+   RESPONSIVE UTILITIES
+   ============================================================ */
+
+/* Grids */
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Tables */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll table {
+  min-width: 600px;
+}
+
+/* Topbar actions */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Login */
+.login-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+}
+.login-panel-right {
+  display: flex;
+}
+
+/* Page padding */
+.page-pad {
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .grid-stats {
+    grid-template-columns: 1fr;
+  }
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
+  .login-grid {
+    grid-template-columns: 1fr;
+  }
+  .login-panel-right {
+    display: none;
+  }
+  .page-pad {
+    padding: 16px;
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+}
