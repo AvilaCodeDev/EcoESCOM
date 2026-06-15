@@ -42,3 +42,5 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 CMD ["node", "apps/web/server.js"]
+
+FROM runner AS development

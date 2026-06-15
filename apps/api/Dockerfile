@@ -31,3 +31,5 @@ COPY package.json pnpm-workspace.yaml ./
 
 EXPOSE 4000
 CMD ["node", "node_modules/.bin/tsx", "apps/api/src/server.ts"]
+
+FROM runner AS development
