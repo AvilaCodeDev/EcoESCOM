@@ -13,6 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   api:
     build:
@@ -39,6 +41,9 @@ services:
         node node_modules/.bin/tsx apps/api/src/seed.ts &&
         node node_modules/.bin/tsx apps/api/src/server.ts
       "
+    networks:
+      - internal
+      - dokploy-network
 
   web:
     build:
@@ -52,6 +57,14 @@ services:
       NODE_ENV: production
     depends_on:
       - api
+    networks:
+      - internal
+      - dokploy-network
+
+networks:
+  internal:
+  dokploy-network:
+    external: true
 
 volumes:
   db_data:
