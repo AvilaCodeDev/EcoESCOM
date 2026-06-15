@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Roles {
@@ -18,40 +14,84 @@ enum Roles {
   SUPERADMIN
 }
 
-enum TiposResiduos {
-  Organico
-  Inorganico
-  Reciclable
+model TiposResiduo {
+  id_tipo           Int            @id @default(autoincrement())
+  nombre            String         @unique
+  es_predeterminado Boolean        @default(false)
+  contenedores      Contenedores[]
+  alertas           Alertas[]
 }
 
+model Turnos {
+  id_turno    Int              @id @default(autoincrement())
+  nombre      String           @unique
+  hora_inicio String
+  hora_fin    String
+  usuarios    UsuariosTurnos[]
+}
 
 model Usuarios {
-  id_usuario Int @id @default(autoincrement())
-  nombre String
-  correo String @unique
-  contrasenia String
-  activo Boolean
-  rol Roles
-  fecha_creacion DateTime @default(now())
-  ultima_actualizacion DateTime @updatedAt
-} 
-
-model Contenedores {
-  id_contenedor Int @id @default(autoincrement())
-  tipo_residuo TiposResiduos
-  id_zona Int
-
-  zona Zonas @relation("ZonasContenedores", fields: [id_zona], references: [id_zona])
+  id_usuario               Int                @id @default(autoincrement())
+  nombre                   String
+  correo                   String             @unique
+  contrasenia              String
+  activo                   Boolean            @default(true)
+  rol                      Roles
+  debe_cambiar_contrasenia Boolean            @default(false)
+  fecha_creacion           DateTime           @default(now())
+  ultima_actualizacion     DateTime           @updatedAt
+  turnos                   UsuariosTurnos[]
+  registros_vaciado        RegistrosVaciado[] @relation("OperadorRegistros")
+  alertas_creadas          Alertas[]          @relation("CreadorAlerta")
 }
 
+model UsuariosTurnos {
+  id_usuario Int
+  id_turno   Int
+  usuario    Usuarios @relation(fields: [id_usuario], references: [id_usuario])
+  turno      Turnos   @relation(fields: [id_turno], references: [id_turno])
 
+  @@id([id_usuario, id_turno])
+}
 
 model Zonas {
-  id_zona Int @id @default(autoincrement())
-  nombre_zona String
-  activo Boolean
-  
-  contenedor Contenedores[] @relation("ZonasContenedores")
+  id_zona      Int            @id @default(autoincrement())
+  nombre_zona  String
+  descripcion  String?
+  activo       Boolean        @default(true)
+  contenedores Contenedores[] @relation("ZonasContenedores")
+  alertas      Alertas[]
 }
 
+model Contenedores {
+  id_contenedor     Int                @id @default(autoincrement())
+  nombre_contenedor String
+  codigo            String             @unique
+  activo            Boolean            @default(true)
+  id_zona           Int
+  id_tipo_residuo   Int
+  zona              Zonas              @relation("ZonasContenedores", fields: [id_zona], references: [id_zona])
+  tipo_residuo      TiposResiduo       @relation(fields: [id_tipo_residuo], references: [id_tipo])
+  registros_vaciado RegistrosVaciado[]
+}
 
+model RegistrosVaciado {
+  id_registro   Int          @id @default(autoincrement())
+  cantidad      Decimal      @db.Decimal(10, 2)
+  fecha         DateTime     @default(now())
+  id_contenedor Int
+  id_operador   Int
+  contenedor    Contenedores @relation(fields: [id_contenedor], references: [id_contenedor])
+  operador      Usuarios     @relation("OperadorRegistros", fields: [id_operador], references: [id_usuario])
+}
+
+model Alertas {
+  id_alerta       Int          @id @default(autoincrement())
+  fecha_creacion  DateTime     @default(now())
+  id_zona         Int
+  id_tipo_residuo Int
+  id_creador      Int
+  zona            Zonas        @relation(fields: [id_zona], references: [id_zona])
+  tipo_residuo    TiposResiduo @relation(fields: [id_tipo_residuo], references: [id_tipo])
+  creador         Usuarios     @relation("CreadorAlerta", fields: [id_creador], references: [id_usuario])
+}
