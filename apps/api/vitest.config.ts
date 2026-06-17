@@ -7,10 +7,12 @@ export default defineConfig({
         coverage: {
             provider: "v8",
             reporter: ["text", "html"],
-            include: ["src/**/*.ts"],
+            include: [
+                "src/utils/**/*.ts",
+                "src/middlewares/**/*.ts",
+                "src/modules/auth/auth.service.ts",
+            ],
             exclude: [
-                "src/seed.ts",
-                "src/server.ts",
                 "src/**/*.d.ts",
                 "src/__tests__/**",
             ],

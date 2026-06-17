@@ -105,6 +105,17 @@ describe("GET /api/auth/profile", () => {
         expect(res.status).toBe(401);
     });
 
+    it("returns 404 when user does not exist", async () => {
+        mockFindUnique.mockResolvedValueOnce(null);
+
+        const res = await request(app)
+            .get("/api/auth/profile")
+            .set("Authorization", `Bearer ${validToken}`);
+
+        expect(res.status).toBe(404);
+        expect(res.body.message).toBe("Usuario no encontrado");
+    });
+
     it("returns 200 with profile data when token is valid", async () => {
         mockFindUnique.mockResolvedValueOnce({
             id_usuario: 1,
@@ -125,9 +136,41 @@ describe("GET /api/auth/profile", () => {
         expect(res.body.email).toBe("test@example.com");
         expect(res.body).toHaveProperty("turns");
     });
+
+    it("returns 200 with mapped turns when user has active shifts", async () => {
+        mockFindUnique.mockResolvedValueOnce({
+            id_usuario: 1,
+            nombre: "Test User",
+            correo: "test@example.com",
+            activo: true,
+            rol: "ADMIN",
+            fecha_creacion: new Date(),
+            ultima_actualizacion: new Date(),
+            turnos: [{ turno: { id_turno: 2, nombre: "Mañana" } }],
+        });
+
+        const res = await request(app)
+            .get("/api/auth/profile")
+            .set("Authorization", `Bearer ${validToken}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.turns).toEqual([{ id: 2, nombre: "Mañana" }]);
+    });
 });
 
 describe("POST /api/auth/change-password", () => {
+    it("returns 404 when user does not exist", async () => {
+        mockFindUnique.mockResolvedValueOnce(null);
+
+        const res = await request(app)
+            .post("/api/auth/change-password")
+            .set("Authorization", `Bearer ${validToken}`)
+            .send({ currentPassword: "any-password", newPassword: "new-password-123" });
+
+        expect(res.status).toBe(404);
+        expect(res.body.message).toBe("Usuario no encontrado");
+    });
+
     it("returns 400 when current password is wrong", async () => {
         mockFindUnique.mockResolvedValueOnce(activeUser());
 
