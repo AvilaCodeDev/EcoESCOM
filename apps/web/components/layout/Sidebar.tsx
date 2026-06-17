@@ -54,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role = '', unreadCount = 0, op
       title: 'Administración',
       roles: ADMIN_ROLES,
       items: [
-        { id: 'validacion', label: 'Validación', icon: 'check-square', href: '/dashboard/validacion' },
+        { id: 'validacion', label: 'Validación', icon: 'check-square', href: '/dashboard/validacion', roles: ['ADMIN'] },
         { id: 'usuarios', label: 'Usuarios', icon: 'users', href: '/dashboard/usuarios' },
         { id: 'ubicaciones', label: 'Ubicaciones', icon: 'map-pin', href: '/dashboard/ubicaciones' },
       ],
