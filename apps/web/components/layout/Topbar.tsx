@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Icon } from '../ui/Icon';
 import { useMobileMenu } from '../../lib/mobile-menu-context';
 import { useIsMobile } from '../../lib/use-mobile';
+import { useAuth } from '../../lib/auth-context';
 
 interface TopbarProps {
   title: string;
@@ -14,6 +16,13 @@ interface TopbarProps {
 export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
   const isMobile = useIsMobile();
   const openMenu = useMobileMenu();
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   return (
     <header style={{
@@ -50,8 +59,24 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
           {subtitle && <span style={{ fontSize: 12, color: 'var(--fg-3)', marginTop: 1 }}>{subtitle}</span>}
         </div>
       </div>
-      <div className="topbar-actions">
-        {actions}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="topbar-actions">
+          {actions}
+        </div>
+        {isMobile && (
+          <button
+            onClick={handleLogout}
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: 6, borderRadius: 8, color: 'var(--fg-3)',
+              display: 'flex', alignItems: 'center', flexShrink: 0,
+            }}
+          >
+            <Icon name="log-out" size={20} />
+          </button>
+        )}
       </div>
     </header>
   );
