@@ -76,7 +76,7 @@ export const HistorialScreen: React.FC = () => {
         <Card padding={0}>
           <div style={{ padding: '14px 20px', display: 'flex', gap: 10, alignItems: 'center', borderBottom: '1px solid var(--neutral-100)' }}>
             <div style={{ flex: 1, maxWidth: 320 }}>
-              <Input icon="search" placeholder="Buscar por ID, ubicación, usuario…" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input icon="search" placeholder="Buscar por ID, ubicación, usuario…" value={search} onChange={(e) => setSearch(e.target.value.slice(0, 60))} maxLength={60} />
             </div>
           </div>
 
