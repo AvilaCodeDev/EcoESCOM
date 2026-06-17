@@ -52,6 +52,10 @@ export const RegistroScreen: React.FC = () => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idContenedor || !cantidad) return;
+    if (Number(cantidad) <= 0 || Number(cantidad) > 1000) {
+      setError('El peso debe estar entre 0.1 kg y 1 000 kg');
+      return;
+    }
     setError('');
     setSubmitting(true);
     try {
@@ -102,7 +106,7 @@ export const RegistroScreen: React.FC = () => {
                 />
               )}
             </Field>
-            <Field label="Peso" help="Mínimo 0.1 kg, hasta 1 decimal">
+            <Field label="Peso" help="Entre 0.1 kg y 1 000 kg, hasta 1 decimal">
               <Input
                 value={cantidad}
                 onChange={(e) => setCantidad(e.target.value)}
@@ -111,6 +115,7 @@ export const RegistroScreen: React.FC = () => {
                 icon="scale"
                 type="number"
                 min="0.1"
+                max="1000"
                 step="0.1"
               />
             </Field>
