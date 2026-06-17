@@ -56,6 +56,10 @@ export const RegistroScreen: React.FC = () => {
       setError('El peso debe estar entre 0.1 kg y 1 000 kg');
       return;
     }
+    if (fecha > new Date().toISOString().slice(0, 10)) {
+      setError('La fecha no puede ser futura');
+      return;
+    }
     setError('');
     setSubmitting(true);
     try {
@@ -120,7 +124,7 @@ export const RegistroScreen: React.FC = () => {
               />
             </Field>
             <Field label="Fecha">
-              <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} icon="calendar" />
+              <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} icon="calendar" max={new Date().toISOString().slice(0, 10)} />
             </Field>
           </div>
         </Card>
