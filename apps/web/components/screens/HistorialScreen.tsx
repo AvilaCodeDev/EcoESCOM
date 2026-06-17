@@ -9,6 +9,7 @@ import { IconButton } from '../ui/IconButton';
 import { Input } from '../ui/Input';
 import { Badge } from '../ui/Badge';
 import { api } from '../../lib/api';
+import { useAuth } from '../../lib/auth-context';
 
 interface Registro {
   id: number;
@@ -35,6 +36,7 @@ function tipoToTone(nombre: string): ToneProp {
 
 export const HistorialScreen: React.FC = () => {
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const [records, setRecords] = useState<Registro[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -62,7 +64,7 @@ export const HistorialScreen: React.FC = () => {
         subtitle={loading ? 'Cargando…' : `${filtered.length} registros · ${total.toFixed(1)} kg`}
         actions={<>
           <Button variant="secondary" icon="download">Exportar</Button>
-          <Button icon="plus" onClick={() => router.push('/dashboard/registro')}>Nuevo</Button>
+          {!isAdmin && <Button icon="plus" onClick={() => router.push('/dashboard/registro')}>Nuevo</Button>}
         </>}
       />
 
