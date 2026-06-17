@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { ValidacionScreen } from '../../../components/screens/ValidacionScreen';
 
 export default function ValidacionPage() {
-  redirect('/dashboard');
+  return <ValidacionScreen />;
 }
