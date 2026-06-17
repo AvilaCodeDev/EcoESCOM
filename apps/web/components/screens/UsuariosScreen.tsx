@@ -232,9 +232,10 @@ export const UsuariosScreen: React.FC = () => {
               <Field label="Nombre completo">
                 <Input
                   value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                  onChange={(e) => setNewName(e.target.value.slice(0, 100))}
                   placeholder="Nombre del usuario"
                   icon="user"
+                  maxLength={100}
                   required
                   autoFocus
                 />
@@ -243,9 +244,10 @@ export const UsuariosScreen: React.FC = () => {
                 <Input
                   type="email"
                   value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  onChange={(e) => setNewEmail(e.target.value.slice(0, 100))}
                   placeholder="correo@ejemplo.com"
                   icon="mail"
+                  maxLength={100}
                   required
                 />
               </Field>
