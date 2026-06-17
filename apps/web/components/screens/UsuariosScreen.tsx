@@ -120,7 +120,7 @@ export const UsuariosScreen: React.FC = () => {
         <Card padding={0}>
           <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--neutral-100)' }}>
             <div style={{ flex: 1, maxWidth: 320 }}>
-              <Input icon="search" placeholder="Buscar por nombre o correo…" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input icon="search" placeholder="Buscar por nombre o correo…" value={search} onChange={(e) => setSearch(e.target.value.slice(0, 60))} maxLength={60} />
             </div>
             <div style={{ display: 'flex', gap: 6, padding: 4, background: 'var(--neutral-100)', borderRadius: 10 }}>
               {[
