@@ -13,6 +13,7 @@ const userWithTurns = {
     debe_cambiar_contrasenia: true,
     fecha_creacion: true,
     ultima_actualizacion: true,
+    ultima_sesion: true,
     turnos: {
         select: {
             turno: {
@@ -31,6 +32,7 @@ const toPublicUser = (user: {
     debe_cambiar_contrasenia: boolean;
     fecha_creacion: Date;
     ultima_actualizacion: Date;
+    ultima_sesion: Date | null;
     turnos: Array<{ turno: { id_turno: number; nombre: string } }>;
 }) => ({
     id: user.id_usuario,
@@ -41,6 +43,7 @@ const toPublicUser = (user: {
     mustChangePassword: user.debe_cambiar_contrasenia,
     createdAt: user.fecha_creacion,
     updatedAt: user.ultima_actualizacion,
+    lastSession: user.ultima_sesion,
     turns: user.turnos.map((t) => ({ id: t.turno.id_turno, nombre: t.turno.nombre }))
 });
 

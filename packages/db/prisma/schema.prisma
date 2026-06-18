@@ -40,6 +40,7 @@ model Usuarios {
   debe_cambiar_contrasenia Boolean            @default(false)
   fecha_creacion           DateTime           @default(now())
   ultima_actualizacion     DateTime           @updatedAt
+  ultima_sesion            DateTime?
   turnos                   UsuariosTurnos[]
   registros_vaciado        RegistrosVaciado[] @relation("OperadorRegistros")
   alertas_creadas          Alertas[]          @relation("CreadorAlerta")

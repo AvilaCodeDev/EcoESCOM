@@ -21,6 +21,11 @@ export const login = async (input: LoginInput) => {
 
     const token = signToken({ sub: user.id_usuario, role: user.rol });
 
+    await prisma.usuarios.update({
+        where: { id_usuario: user.id_usuario },
+        data: { ultima_sesion: new Date() },
+    });
+
     return {
         token,
         mustChangePassword: user.debe_cambiar_contrasenia,

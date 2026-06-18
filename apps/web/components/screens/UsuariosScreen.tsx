@@ -12,6 +12,8 @@ import { Badge } from '../ui/Badge';
 import { Avatar } from '../ui/Avatar';
 import { api } from '../../lib/api';
 
+const JWT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
 interface ApiUser {
   id: number;
   name: string;
@@ -21,7 +23,13 @@ interface ApiUser {
   mustChangePassword: boolean;
   createdAt: string;
   updatedAt: string;
+  lastSession: string | null;
   turns: { id: number; nombre: string }[];
+}
+
+function hasActiveSession(user: ApiUser): boolean {
+  if (!user.lastSession) return false;
+  return Date.now() - new Date(user.lastSession).getTime() < JWT_WINDOW_MS;
 }
 
 interface CreateUserResponse extends ApiUser {
@@ -104,13 +112,13 @@ export const UsuariosScreen: React.FC = () => {
 
   const stats = {
     all: users.length,
-    activo: users.filter((u) => u.active).length,
-    inactivo: users.filter((u) => !u.active).length,
+    activo: users.filter(hasActiveSession).length,
+    inactivo: users.filter((u) => !hasActiveSession(u)).length,
   };
 
   const filtered = users.filter((u) => {
-    if (tab === 'activo' && !u.active) return false;
-    if (tab === 'inactivo' && u.active) return false;
+    if (tab === 'activo' && !hasActiveSession(u)) return false;
+    if (tab === 'inactivo' && hasActiveSession(u)) return false;
     if (search && !`${u.name} ${u.email}`.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -193,7 +201,9 @@ export const UsuariosScreen: React.FC = () => {
                         </span>
                       </td>
                       <td style={{ padding: '14px 12px' }}>
-                        <Badge tone={u.active ? 'success' : 'neutral'} dot>{u.active ? 'activo' : 'inactivo'}</Badge>
+                        <Badge tone={hasActiveSession(u) ? 'success' : 'neutral'} dot>
+                          {hasActiveSession(u) ? 'activo' : 'inactivo'}
+                        </Badge>
                       </td>
                       <td style={{ padding: '14px 12px', color: 'var(--fg-3)', fontSize: 13 }}>
                         {(u.turns ?? []).length > 0 ? (u.turns ?? []).map((t) => t.nombre).join(', ') : '—'}
