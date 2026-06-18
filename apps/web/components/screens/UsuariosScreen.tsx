@@ -55,6 +55,19 @@ export const UsuariosScreen: React.FC = () => {
   const [formError, setFormError] = useState('');
 
   const [createdUser, setCreatedUser] = useState<{ name: string; email: string; password: string } | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+
+  const handleToggleActive = async (u: ApiUser) => {
+    setTogglingId(u.id);
+    try {
+      await api.patch(`/users/${u.id}`, { active: !u.active });
+      setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, active: !u.active } : x));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar usuario');
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   useEffect(() => {
     api.get<ApiUser[]>('/users')
@@ -186,7 +199,20 @@ export const UsuariosScreen: React.FC = () => {
                         {(u.turns ?? []).length > 0 ? (u.turns ?? []).map((t) => t.nombre).join(', ') : '—'}
                       </td>
                       <td style={{ padding: '14px 20px' }}>
-                        <IconButton icon="more-horizontal" variant="ghost" size={32} />
+                        <button
+                          onClick={() => handleToggleActive(u)}
+                          disabled={togglingId === u.id}
+                          style={{
+                            fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-sans)',
+                            padding: '5px 12px', borderRadius: 8, cursor: 'pointer',
+                            border: `1px solid ${u.active ? 'var(--danger-300)' : 'var(--success-300)'}`,
+                            background: u.active ? 'var(--danger-50)' : 'var(--success-50)',
+                            color: u.active ? 'var(--danger-fg)' : 'var(--success-fg)',
+                            opacity: togglingId === u.id ? 0.5 : 1,
+                          }}
+                        >
+                          {togglingId === u.id ? '…' : u.active ? 'Deshabilitar' : 'Habilitar'}
+                        </button>
                       </td>
                     </tr>
                   );
